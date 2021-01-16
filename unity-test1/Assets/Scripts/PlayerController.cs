@@ -22,6 +22,4 @@ public class PlayerController : MonoBehaviour
         gameObject.transform.position = new Vector2 (transform.position.x + (dirX * speed), 
             transform.position.y + (dirY * speed));
     }
-
-
 }
