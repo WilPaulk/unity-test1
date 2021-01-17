@@ -10,12 +10,19 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] private float movementSpeed = 4f;
     [SerializeField] private float jumpHeight = 5f;
-
+    [SerializeField] private int extraJumpNum = 2;
+    private int extraJumpsRemaining;
 
     [SerializeField] bool isGrounded;
     [SerializeField] Transform groundCheck;
     [SerializeField] Transform groundCheckL;
     [SerializeField] Transform groundCheckR;
+
+// Binary movement variables
+    private bool rightMovement;
+    private bool leftMovement;
+    private bool groundJump;
+    private bool extraJump;
 
     // Start is called before the first frame update
     void Start()
@@ -28,38 +35,37 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        rightMovement = Input.GetKey("d") || Input.GetKey("right") ? true : false;
+        leftMovement = Input.GetKey("a") || Input.GetKey("left") ? true : false;
+        if (Input.GetKeyDown("space") && isGrounded) 
+            groundJump = true;
+        if (Input.GetKeyDown("space") && isGrounded == false && extraJumpsRemaining > 0)
+            extraJump = true;
     }
 
     private void FixedUpdate()
     {
-        if(Physics2D.Linecast(transform.position, groundCheck.position, 1 << LayerMask.NameToLayer("Ground")) ||
-         (Physics2D.Linecast(transform.position, groundCheckL.position, 1 << LayerMask.NameToLayer("Ground"))) ||
-         (Physics2D.Linecast(transform.position, groundCheckR.position, 1 << LayerMask.NameToLayer("Ground"))))
+        if (Physics2D.Linecast(transform.position, groundCheck.position, 1 << LayerMask.NameToLayer("Ground")) ||
+          (Physics2D.Linecast(transform.position, groundCheckL.position, 1 << LayerMask.NameToLayer("Ground"))) ||
+          (Physics2D.Linecast(transform.position, groundCheckR.position, 1 << LayerMask.NameToLayer("Ground"))))
         {
             isGrounded = true;
         }
         else
         {
             isGrounded = false;
-            if(rb2d.velocity.y >0)
-            {
-                animator.Play("Player_rise");
-            }
-            else
-            {
-                animator.Play("Player_fall");
-            }
+            string airAnimation = rb2d.velocity.y > 0 ? "Player_rise" : "Player_fall";
+            animator.Play(airAnimation);
         }
 
-        if(Input.GetKey("d") || Input.GetKey("right"))
+        if (rightMovement)
         {
             rb2d.velocity = new Vector2(movementSpeed, rb2d.velocity.y);
             if(isGrounded)
                 animator.Play("Player_run");
             spriteRenderer.flipX = false;
         }
-        else if(Input.GetKey("a") || Input.GetKey("left"))
+        else if (leftMovement)
         {
             rb2d.velocity = new Vector2(-movementSpeed, rb2d.velocity.y);
             if(isGrounded)
@@ -73,15 +79,23 @@ public class PlayerController : MonoBehaviour
                 animator.Play("Player_idle");
         }
 
-        if(Input.GetKey("space") && isGrounded)
+        if (groundJump)
         {
             rb2d.velocity = new Vector2(rb2d.velocity.x, jumpHeight);
+            extraJumpsRemaining = extraJumpNum;
+            groundJump = false;
+        }
+        else if (extraJump)
+        {
+            rb2d.velocity = new Vector2(rb2d.velocity.x, jumpHeight);
+            extraJumpsRemaining--;
+            extraJump = false;
         }
     }
 
     private void OnCollisionEnter2D(Collision2D other)
     {
-        if(other.gameObject.CompareTag("Platform") && isGrounded)
+        if (other.gameObject.CompareTag("Platform") && isGrounded)
         {
             this.transform.parent = other.gameObject.transform;
         }
@@ -89,7 +103,7 @@ public class PlayerController : MonoBehaviour
 
     private void OnCollisionExit2D(Collision2D other)
     {
-        if(other.gameObject.CompareTag("Platform") && isGrounded == false)
+        if (other.gameObject.CompareTag("Platform") && isGrounded == false)
         {
             this.transform.parent = null;
         }
