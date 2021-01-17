@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-
     Animator animator;
     Rigidbody2D rb2d;
     SpriteRenderer spriteRenderer;
@@ -79,15 +78,20 @@ public class PlayerController : MonoBehaviour
             rb2d.velocity = new Vector2(rb2d.velocity.x, jumpHeight);
         }
     }
-    void OnCollisionEnter2D(Collision2D col)
+
+    private void OnCollisionEnter2D(Collision2D other)
     {
-        if(col.gameObject.name.Equals("platform"))
-            this.transform.parent = col.transform;
+        if(other.gameObject.CompareTag("Platform") && isGrounded)
+        {
+            this.transform.parent = other.gameObject.transform;
+        }
     }
 
-    void OnCollisionExit2D(Collision2D col)
+    private void OnCollisionExit2D(Collision2D other)
     {
-        if(col.gameObject.name.Equals("platform"))
+        if(other.gameObject.CompareTag("Platform") && isGrounded == false)
+        {
             this.transform.parent = null;
+        }
     }
 }
