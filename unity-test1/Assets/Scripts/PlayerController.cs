@@ -10,11 +10,13 @@ public class PlayerController : MonoBehaviour
     SpriteRenderer spriteRenderer;
 
     [SerializeField] private float movementSpeed = 4f;
-    [SerializeField] private float jumpHeight = 7f;
+    [SerializeField] private float jumpHeight = 5f;
 
 
     [SerializeField] bool isGrounded;
     [SerializeField] Transform groundCheck;
+    [SerializeField] Transform groundCheckL;
+    [SerializeField] Transform groundCheckR;
 
     // Start is called before the first frame update
     void Start()
@@ -32,7 +34,9 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if(Physics2D.Linecast(transform.position, groundCheck.position, 1 << LayerMask.NameToLayer("Ground")))
+        if(Physics2D.Linecast(transform.position, groundCheck.position, 1 << LayerMask.NameToLayer("Ground")) ||
+         (Physics2D.Linecast(transform.position, groundCheckL.position, 1 << LayerMask.NameToLayer("Ground"))) ||
+         (Physics2D.Linecast(transform.position, groundCheckR.position, 1 << LayerMask.NameToLayer("Ground"))))
         {
             isGrounded = true;
         }
@@ -74,5 +78,16 @@ public class PlayerController : MonoBehaviour
         {
             rb2d.velocity = new Vector2(rb2d.velocity.x, jumpHeight);
         }
+    }
+    void OnCollisionEnter2D(Collision2D col)
+    {
+        if(col.gameObject.name.Equals("platform"))
+            this.transform.parent = col.transform;
+    }
+
+    void OnCollisionExit2D(Collision2D col)
+    {
+        if(col.gameObject.name.Equals("platform"))
+            this.transform.parent = null;
     }
 }
