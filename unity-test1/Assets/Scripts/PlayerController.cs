@@ -43,6 +43,7 @@ public class PlayerController : MonoBehaviour
     private bool dropThroughCoroutineIsRunning;
 
     private float xInput;
+    string airAnimation;
 
     void Start()
     {
@@ -70,17 +71,15 @@ public class PlayerController : MonoBehaviour
         Jump();    
     }
 
+    private void LateUpdate()
+    {
+        AnimationHandling();
+    }
+
     private void CheckInput() // Check for movement input
     {
-        // xInput = Input.GetAxisRaw("Horizontal");
-        // if (xInput == 1)
-        //     spriteRenderer.flipX = false;
-        // else if (xInput == -1)
-        //     spriteRenderer.flipX = true;
-        
         // Standard movement
-        rightMovement = Input.GetKey("d") || Input.GetKey("right") ? true : false;
-        leftMovement = Input.GetKey("a") || Input.GetKey("left") ? true : false;
+        xInput = Input.GetAxisRaw("Horizontal");
         if (Input.GetKeyDown("space") && isGrounded) 
             groundJump = true;
         if (Input.GetKeyDown("space") && !isGrounded && extraJumpsRemaining > 0)
@@ -169,53 +168,23 @@ public class PlayerController : MonoBehaviour
     // Standard directional movement physics & animation handling
     private void BaseDirectionalMovement()
     {
-    //     if (isGrounded && !isOnSlope)
-    //     {
-    //         rb2d.velocity = new Vector2(xInput * movementSpeed, 0);
-    //         if (xInput != 0)
-    //             animator.Play("Player_run");
-    //         else
-    //             animator.Play("Player_idle");
-    //     }
-    //     else if (isGrounded && isOnSlope)
-    //     {
-    //         rb2d.velocity = new Vector2(movementSpeed * slopeNormalPerp.x * -xInput, movementSpeed * slopeNormalPerp.y * -xInput);
-    //         if (xInput != 0)
-    //             animator.Play("Player_run");
-    //         else
-    //             animator.Play("Player_idle");
-    //     }
-    //     else if (!isGrounded)
-    //     {
-    //         rb2d.velocity = new Vector2(xInput * movementSpeed, rb2d.velocity.y);
-    //         string airAnimation = rb2d.velocity.y > 0 ? "Player_rise" : "Player_fall";
-    //         animator.Play(airAnimation);
-    //     }
-        
-        if (!isGrounded)
+        if (isGrounded /* && !isOnSlope */)
         {
-            string airAnimation = rb2d.velocity.y > 0 ? "Player_rise" : "Player_fall";
-            animator.Play(airAnimation);
+            rb2d.velocity = new Vector2(xInput * movementSpeed, rb2d.velocity.y);
+            
         }
-        if (rightMovement)
+        // else if (isGrounded && isOnSlope)
+        // {
+        //     rb2d.velocity = new Vector2(movementSpeed * slopeNormalPerp.x * -xInput, movementSpeed * slopeNormalPerp.y * -xInput);
+        //     if (xInput != 0)
+        //         animator.Play("Player_run");
+        //     else
+        //         animator.Play("Player_idle");
+        // } 
+        else if (!isGrounded)
         {
-            rb2d.velocity = new Vector2(horizontalSpeed, rb2d.velocity.y);
-            if(isGrounded)
-                animator.Play("Player_run");
-            spriteRenderer.flipX = false;
-        }
-        else if (leftMovement)
-        {
-            rb2d.velocity = new Vector2(-horizontalSpeed, rb2d.velocity.y);
-            if(isGrounded)
-                animator.Play("Player_run");
-            spriteRenderer.flipX = true;
-        }
-        else
-        {
-            rb2d.velocity = new Vector2(0, rb2d.velocity.y);
-            if(isGrounded)
-                animator.Play("Player_idle");
+            rb2d.velocity = new Vector2(xInput * movementSpeed, rb2d.velocity.y);
+            airAnimation = rb2d.velocity.y > 0 ? "Player_rise" : "Player_fall";
         }
     }
 
@@ -223,13 +192,13 @@ public class PlayerController : MonoBehaviour
     {
         if (groundJump)
         {
-            rb2d.velocity = new Vector2(rb2d.velocity.x, jumpHeight);
+            rb2d.velocity = new Vector2(xInput, jumpHeight);
             extraJumpsRemaining = extraJumpNum;
             groundJump = false;
         }
         else if (extraJump)
         {
-            rb2d.velocity = new Vector2(rb2d.velocity.x, jumpHeight);
+            rb2d.velocity = new Vector2(xInput, jumpHeight);
             extraJumpsRemaining--;
             extraJump = false;
         }
@@ -278,5 +247,23 @@ public class PlayerController : MonoBehaviour
         {
             this.transform.parent = null;
         }
+    }
+
+    private void AnimationHandling()
+    {
+        if (xInput == 1)
+            spriteRenderer.flipX = false;
+        else if (xInput == -1)
+            spriteRenderer.flipX = true;
+
+        if (isGrounded)
+        {
+            if (xInput != 0)
+                animator.Play("Player_run");
+            else
+                animator.Play("Player_idle");
+        }
+        else
+            animator.Play(airAnimation);
     }
 }
